@@ -9,3 +9,7 @@ It is taken from [https://github.com/mohitgupta-1O1/Kaggle-SMS-Spam-Collection-D
 ## Example
 
 The python sample code and rest of the files fall under the license of this repository.
+
+## M-series Apple Computers
+
+https://makeoptim.com/en/deep-learning/tensorflow-metal

@@ -1,29 +1,27 @@
-import tensorflow as tf
+import pandas as pd
 import numpy as np
-from sklearn.preprocessing import LabelEncoder
-import csv
+from sklearn.model_selection import train_test_split
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Embedding, LSTM, Dense, Dropout
 
-f = open('spam_train.csv', 'r')
-rows = []
-with open('spam.csv', 'r') as csv_file:
-    reader = csv.reader(csv_file)
-    for row in reader:
-        rows.append(row)
+data = pd.read_csv('spam_train.csv', encoding='latin-1')
+data = data[['v2', 'v1']]
+data.columns = ['text', 'label']
 
-rows = rows[1:] # remove header
-labels = [row[0] for row in rows]
-texts = [row[1] for row in rows]
+# Convert labels to numerical values
+data['label'] = data['label'].map({'ham': 0, 'spam': 1})
 
-# Encode labels
-label_encoder = LabelEncoder()
-encoded_labels = label_encoder.fit_transform(labels)
-
-# Create a dummy input layer (we won't use it)
-inputs = np.random.rand(len(texts), 10)  # Replace with actual text embeddings if needed
+tokenizer = Tokenizer(num_words=20000)
+tokenizer.fit_on_texts(data['text'])
+X = tokenizer.texts_to_sequences(data['text'])
+X = pad_sequences(X, maxlen=3900)
+y = data['label'].values
 
 # Create a simple model
-model = tf.keras.Sequential([
-    tf.keras.layers.Dense(1, activation='sigmoid')  # Output layer
+model = Sequential([
+    Dense(1, activation='sigmoid')  # Output layer
 ])
 
 # Compile the model
@@ -31,9 +29,9 @@ model.compile(optimizer='adam',
               loss='binary_crossentropy',
               metrics=['accuracy']) # Use 'accuracy' for binary classification
 
-
+X_train = X
+y_train = y
 # Train the model (always output 1)
-model.fit(inputs, encoded_labels, epochs=1)
+model.fit(X_train, y_train, epochs=0)
 
-# Assuming you have a trained model named 'model'
-model.save('my_model.keras')
+model.save('spam_detector.h5')

@@ -1,24 +1,22 @@
-import tensorflow as tf
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+import pandas as pd
 import csv
 
-# Load the model
-model = tf.keras.models.load_model('my_model.keras') 
+model = load_model('spam_detector.h5')
 
-rows = []
-with open('spam_test.csv', 'r') as csv_file:
-    reader = csv.reader(csv_file)
-    for row in reader:
-        rows.append(row)
+data = pd.read_csv('spam_test.csv', encoding='latin-1')
+data = data[['v2', 'v1']]
+data.columns = ['text', 'label']
 
-rows = rows[1:] # remove header
-labels = [row[0] for row in rows]
-texts = [row[1] for row in rows]
+# Convert labels to numerical values
+data['label'] = data['label'].map({'ham': 0, 'spam': 1})
+tokenizer = Tokenizer(num_words=20000)
+tokenizer.fit_on_texts(data['text'])
+X = tokenizer.texts_to_sequences(data['text'])
+X = pad_sequences(X, maxlen=1600)
+y = data['label'].values
 
-
-# Evaluate the model
-loss, accuracy = model.evaluate(texts, labels)
-
-print(f'Loss: {loss}, Accuracy: {accuracy}') 
-
-# Make predictions
-predictions = model.predict(labels)
+loss, accuracy = model.evaluate(X, y)
+print(f'Loss: {loss}, Accuracy: {accuracy}')
